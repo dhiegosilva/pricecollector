@@ -35,7 +35,7 @@ public class OperationRunner {
     @Autowired
     private JavaMailSender javaMailSender;
 
-    @Scheduled(cron = "0 0/30 1-17 * * *") //
+    @Scheduled(cron = "0 0/30 1-17 * * *")
     public void run() throws InterruptedException, MessagingException, ExecutionException, IOException {
 
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(6);
