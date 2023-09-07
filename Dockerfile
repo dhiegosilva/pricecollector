@@ -1,4 +1,4 @@
-FROM ghcr.io/graalvm/jdk:latest
+FROM eclipse-temurin:latest
 MAINTAINER Dhiego Silva
 ENV TZ=Europe/Berlin
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/LocalDateTime && echo $TZ > /etc/timezone

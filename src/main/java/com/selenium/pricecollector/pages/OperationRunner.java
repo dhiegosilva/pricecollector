@@ -8,6 +8,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -35,7 +36,7 @@ public class OperationRunner {
     private JavaMailSender javaMailSender;
 
     @Scheduled(cron = "0 0/30 1-17 * * *") //
-    public void run() throws InterruptedException, MessagingException, ExecutionException {
+    public void run() throws InterruptedException, MessagingException, ExecutionException, IOException {
 
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(6);
 
@@ -71,8 +72,11 @@ public class OperationRunner {
         proAurumFuture.get();
         reiseBankFuture.get();
 
-        if(!GlobalVariables.errorCompanyList.isEmpty())
+        if(!GlobalVariables.errorCompanyList.isEmpty()){
             javaMailSender.send(emailService.sendMailHTML());
+            GlobalVariables.errorCompanyList.clear();
+            emailService.clearPhotos();
+        }
     }
 
 }

@@ -12,7 +12,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableConfigurationProperties(value = {FileConfigurationProperties.class})
 @SpringBootApplication
 public class PriceCollectorApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(PriceCollectorApplication.class, args);
     }
