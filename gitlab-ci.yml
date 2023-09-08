@@ -7,7 +7,6 @@ build-maven:
     when: always
     paths:
       - target/PriceCollector-0.0.1-SNAPSHOT.jar
-    expire_in: 1 day
 
 docker-build:
   stage: build
