@@ -282,7 +282,7 @@ public class Auragentum {
             }
             
             ///////////////////////////////////////////////////////////////////////
-            entryDataRepository.deleteByCompanyAndDataCollectionDatetimeIsGreaterThan("Auragentum", Timestamp.valueOf(LocalDate.now().atStartOfDay()));
+            entryDataRepository.deleteByCompanyAndDataCollectionDatetimeAfter("Auragentum", Timestamp.valueOf(LocalDate.now().atStartOfDay()));
             entryDataRepository.saveAll(entryData);
         } catch (
                 Exception e) {

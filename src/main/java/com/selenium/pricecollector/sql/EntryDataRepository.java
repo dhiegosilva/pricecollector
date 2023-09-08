@@ -10,5 +10,5 @@ import java.util.UUID;
 public interface EntryDataRepository extends JpaRepository<EntryData, UUID> {
 
     @Transactional
-    void deleteByCompanyAndDataCollectionDatetimeIsGreaterThan(String company, Timestamp dataCollectionDatetime);
+    void deleteByCompanyAndDataCollectionDatetimeAfter(String company, Timestamp dataCollectionDatetime);
 }

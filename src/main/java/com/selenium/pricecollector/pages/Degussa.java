@@ -43,7 +43,7 @@ public class Degussa {
     private List<Double> ticker = new ArrayList<>();
     private List<Double> aufGeld = new ArrayList<>();
     private List<Double> abSchlag = new ArrayList<>();
-    
+
     public void run() {
 
         try {
@@ -269,9 +269,8 @@ public class Degussa {
                     );
                 }
             }
-
             /////////////////////////////////////////////
-            entryDataRepository.deleteByCompanyAndDataCollectionDatetimeIsGreaterThan("Degussa", Timestamp.valueOf(LocalDate.now().atStartOfDay()));
+            entryDataRepository.deleteByCompanyAndDataCollectionDatetimeAfter("Degussa", Timestamp.valueOf(LocalDate.now().atStartOfDay()));
             entryDataRepository.saveAll(entryData);
         } catch (Exception e) {
             GlobalVariables.errorCompanyList.add("Degussa");

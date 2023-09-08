@@ -238,7 +238,7 @@ public class ReiseBank {
             }
             
             ///////////////////////////////////
-            entryDataRepository.deleteByCompanyAndDataCollectionDatetimeIsGreaterThan("ReiseBank", Timestamp.valueOf(LocalDate.now().atStartOfDay()));
+            entryDataRepository.deleteByCompanyAndDataCollectionDatetimeAfter("ReiseBank", Timestamp.valueOf(LocalDate.now().atStartOfDay()));
             entryDataRepository.saveAll(entryData);
 
         } catch (Exception e) {

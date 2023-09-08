@@ -279,7 +279,7 @@ public class GoldSilberShop {
                 }
             }
             ////////////////////////////////////////////
-            entryDataRepository.deleteByCompanyAndDataCollectionDatetimeIsGreaterThan("GoldSilberShop", Timestamp.valueOf(LocalDate.now().atStartOfDay()));
+            entryDataRepository.deleteByCompanyAndDataCollectionDatetimeAfter("GoldSilberShop", Timestamp.valueOf(LocalDate.now().atStartOfDay()));
             entryDataRepository.saveAll(entryData);
         } catch (Exception e) {
             GlobalVariables.errorCompanyList.add("GoldSilberShop");

@@ -234,7 +234,7 @@ public class ProAurum {
             }
 
             //////////////////////////////////////////////////////////////////////////////
-            entryDataRepository.deleteByCompanyAndDataCollectionDatetimeIsGreaterThan("ProAurum", Timestamp.valueOf(LocalDate.now().atStartOfDay()));
+            entryDataRepository.deleteByCompanyAndDataCollectionDatetimeAfter("ProAurum", Timestamp.valueOf(LocalDate.now().atStartOfDay()));
             entryDataRepository.saveAll(entryData);
         } catch (Exception e) {
             GlobalVariables.errorCompanyList.add("ProAurum");

@@ -309,7 +309,7 @@ public class Philoro {
             }
             
             //////////////////////////////
-            entryDataRepository.deleteByCompanyAndDataCollectionDatetimeIsGreaterThan("Philoro", Timestamp.valueOf(LocalDate.now().atStartOfDay()));
+            entryDataRepository.deleteByCompanyAndDataCollectionDatetimeAfter("Philoro", Timestamp.valueOf(LocalDate.now().atStartOfDay()));
             entryDataRepository.saveAll(entryData);
         } catch (Exception e) {
             GlobalVariables.errorCompanyList.add("Philoro");
