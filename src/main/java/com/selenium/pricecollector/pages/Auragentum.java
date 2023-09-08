@@ -24,28 +24,27 @@ public class Auragentum {
     @Autowired
     private EntryDataRepository entryDataRepository;
     @Autowired
-    MyRemoteWebDriver auragentumDriver;
+    private MyRemoteWebDriver auragentumDriver;
     @Autowired
-    XMLimport xmlimport;
-
-    RemoteWebDriver driver;
-    private List<EntryData> entryData = new ArrayList<>();
-    private List<String> company = new ArrayList<>();
-    private List<String> articleNr = new ArrayList<>();
-    private List<String> category = new ArrayList<>();
-    private List<String> articleName = new ArrayList<>();
-    private List<String> articleWeight = new ArrayList<>();
-    private List<Double> articleBuyPrice = new ArrayList<>();
-    private List<Double> articleSellPrice = new ArrayList<>();
-    private List<Double> ticker = new ArrayList<>();
-    private List<Double> aufGeld = new ArrayList<>();
-    private List<Double> abSchlag = new ArrayList<>();
+    private XMLimport xmlimport;
+    private RemoteWebDriver driver;
 
     public void run() {
 
+        List<EntryData> entryData = new ArrayList<>();
+        List<String> company = new ArrayList<>();
+        List<String> articleNr = new ArrayList<>();
+        List<String> category = new ArrayList<>();
+        List<String> articleName = new ArrayList<>();
+        List<String> articleWeight = new ArrayList<>();
+        List<Double> articleBuyPrice = new ArrayList<>();
+        List<Double> articleSellPrice = new ArrayList<>();
+        List<Double> ticker = new ArrayList<>();
+        List<Double> aufGeld = new ArrayList<>();
+        List<Double> abSchlag = new ArrayList<>();
+
         try {
             driver = auragentumDriver.start();
-
 
             WebElement filterParent;
             int pageQty;

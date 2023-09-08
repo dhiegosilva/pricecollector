@@ -23,26 +23,28 @@ import java.util.List;
 
 @Component
 public class GoldSilberShop {
+
     @Autowired
     private EntryDataRepository entryDataRepository;
     @Autowired
-    MyRemoteWebDriver goldSilberShopDriver;
+    private MyRemoteWebDriver goldSilberShopDriver;
     @Autowired
-    XMLimport xmlimport;
+    private XMLimport xmlimport;
     private RemoteWebDriver driver;
-    private List<EntryData> entryData = new ArrayList<>();
-    private List<String> company = new ArrayList<>();
-    private List<String> articleNr = new ArrayList<>();
-    private List<String> category = new ArrayList<>();
-    private List<String> articleName = new ArrayList<>();
-    private List<String> articleWeight = new ArrayList<>();
-    private List<Double> articleBuyPrice = new ArrayList<>();
-    private List<Double> articleSellPrice = new ArrayList<>();
-    private List<Double> ticker = new ArrayList<>();
-    private List<Double> aufGeld = new ArrayList<>();
-    private List<Double> abSchlag = new ArrayList<>();
-    
+
     public void run() {
+
+        List<EntryData> entryData = new ArrayList<>();
+        List<String> company = new ArrayList<>();
+        List<String> articleNr = new ArrayList<>();
+        List<String> category = new ArrayList<>();
+        List<String> articleName = new ArrayList<>();
+        List<String> articleWeight = new ArrayList<>();
+        List<Double> articleBuyPrice = new ArrayList<>();
+        List<Double> articleSellPrice = new ArrayList<>();
+        List<Double> ticker = new ArrayList<>();
+        List<Double> aufGeld = new ArrayList<>();
+        List<Double> abSchlag = new ArrayList<>();
 
         try {
             driver = goldSilberShopDriver.start();
@@ -52,7 +54,7 @@ public class GoldSilberShop {
 
             //Navigate Page
             driver.navigate().to("https://www.goldsilbershop.de/preisliste.html");
-            Thread.sleep(5000);
+            Thread.sleep(10000);
 
 //            List<WebElement> a = driver.findElements(By.id("focus-lock-id"));
 
@@ -79,8 +81,7 @@ public class GoldSilberShop {
                 driver.findElement(By.id(session)).click();
                 WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
                 wait.until(ExpectedConditions.numberOfElementsToBeMoreThan(By.className("mto-pricelist-title"), 3));
-//                Thread.sleep(25000);
-                Thread.sleep(10000);
+                Thread.sleep(25000);
 
                 articleElementName = driver.findElements(By.className("mto-pricelist-title"));
                 sell = driver.findElements(By.className("mto-pricelist-price-ak"));
