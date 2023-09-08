@@ -1,6 +1,10 @@
+stages:
+  - buildjar
+  - builddocker
+
 build-maven:
+  stage: buildjar
   image: maven:latest
-  stage: build
   script:
     - mvn clean package
   artifacts:
@@ -9,9 +13,7 @@ build-maven:
       - target/PriceCollector-0.0.1-SNAPSHOT.jar
 
 build-docker:
-  stage: build
-  needs:
-    - build-maven
+  stage: builddocker
   image: docker:latest
   services:
     - docker:dind
