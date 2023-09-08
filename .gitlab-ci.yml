@@ -2,7 +2,7 @@ build-maven:
   image: maven:latest
   stage: build
   script:
-    - mvn $MAVEN_CLI_OPTS -Dmaven.test.skip package
+    - mvn clean package
   artifacts:
     when: always
     paths:
