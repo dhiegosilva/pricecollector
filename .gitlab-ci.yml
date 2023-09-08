@@ -1,3 +1,8 @@
+build:
+  stage: build
+  script:
+    - mvn clean package
+
 docker-build:
   stage: build
   image: docker:latest
