@@ -79,7 +79,7 @@ public class Degussa {
                     row = pageElement.getText();
                     lines = row.split("\s");
 
-                    if (lines.length > 7 && lines[2].contains("oz") || lines[2].equals("g") || lines[2].equals("kg")) {
+                    if (lines.length > 8 && lines[2].contains("oz") || lines[2].equals("g") || lines[2].equals("kg")) {
 
                         splitElement = row.split("\s[-]?[0-9]+[,.]?[0-9]*([\\/][0-9]+[,.]?[0-9]*)*\\s(?:gr?|kg|kilogramms?|oz|ounces?|-grm|gramms?)");
                         if (splitElement.length == 2) {
