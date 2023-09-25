@@ -78,7 +78,6 @@ public class Degussa {
                 for (WebElement pageElement : pageElements) {
                     row = pageElement.getText();
                     lines = row.split("\s");
-                    System.out.println("newDegussa");
 
                     if (lines.length > 8 && lines[2].contains("oz") ||lines.length > 8 && lines[2].equals("g") || lines.length > 8&& lines[2].equals("kg")) {
 

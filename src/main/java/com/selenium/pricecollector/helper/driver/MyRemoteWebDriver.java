@@ -31,7 +31,7 @@ public class MyRemoteWebDriver {
     );
 
     public RemoteWebDriver start() throws MalformedURLException {
-        String url ="http://ddvmli005.degussa.local:4444";
+        String url ="http://dxvmli005.degussa.local:4444";
         ChromeOptions param;
         RemoteWebDriver driver;
         param = new ChromeOptions();
