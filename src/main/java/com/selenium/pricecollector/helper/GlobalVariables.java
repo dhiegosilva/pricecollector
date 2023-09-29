@@ -9,18 +9,10 @@ import java.util.List;
 @Service
 public class GlobalVariables {
     @Autowired
-    FileConfigurationProperties fileConfigurationProperties;
-    public static List<String> errorCompanyList = new ArrayList<>();
-    public static String screenshots;
+    static FileConfigurationProperties fileConfigurationProperties;
 
-    public String path() {
-        String filePath;
-        if (System.getProperty("os.name").contains("Windows")) {
-            filePath = System.getProperty("user.home") + fileConfigurationProperties.getFilePathWindows();
-        } else { //linux
-            filePath = fileConfigurationProperties.getFilePathLinux();
-        }
-        return filePath;
-    }
+    public static String path = fileConfigurationProperties.getFilePathLinux();
+
+    public static List<String> errorCompanyList = new ArrayList<>();
 
 }
