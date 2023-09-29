@@ -16,10 +16,12 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 @Component
 public class GlobalFunctions {
+    @Autowired
+    static FileConfigurationProperties fileConfigurationProperties;
     public static void createScreenshot(String company, RemoteWebDriver driver) throws IOException {
     {
         File SrcFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
-        Path destination = Paths.get(GlobalVariables.path + company + ".png");
+        Path destination = Paths.get(fileConfigurationProperties.getFilePathLinux() + company + ".png");
         Files.move(SrcFile.toPath(), destination, REPLACE_EXISTING);
     }
 }}

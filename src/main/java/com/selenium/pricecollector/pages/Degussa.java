@@ -14,6 +14,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 import java.io.IOException;
 import java.sql.Timestamp;
@@ -55,6 +56,7 @@ public class Degussa {
 
             //region Gather Data
             driver.navigate().to("https://www.degussa-goldhandel.de/preise/preisliste/");
+
             try {
                 WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
                 wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("CookieBoxSaveButton")));
