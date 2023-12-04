@@ -2,7 +2,6 @@ package com.selenium.pricecollector.pages;
 
 import com.selenium.pricecollector.email.EmailService;
 import com.selenium.pricecollector.helper.GlobalVariables;
-import jakarta.annotation.PostConstruct;
 import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -36,7 +35,6 @@ public class OperationRunner {
     @Autowired
     private JavaMailSender javaMailSender;
 
-    @PostConstruct
     @Scheduled(cron = "0 0/30 1-18 * * *")
     public void run() throws InterruptedException, MessagingException, ExecutionException, IOException {
 
