@@ -36,7 +36,6 @@ public class OperationRunner {
     private JavaMailSender javaMailSender;
 
     @Scheduled(cron = "0 0/30 1-18 * * *")
-//@Scheduled(fixedDelay = 1000000000, initialDelay = 1)
     public void run() throws InterruptedException, MessagingException, ExecutionException, IOException {
 
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(6);
@@ -73,7 +72,7 @@ public class OperationRunner {
         proAurumFuture.get();
         reiseBankFuture.get();
 
-        if(!GlobalVariables.errorCompanyList.isEmpty()){
+        if (!GlobalVariables.errorCompanyList.isEmpty()) {
             javaMailSender.send(emailService.sendMailHTML());
             GlobalVariables.errorCompanyList.clear();
             emailService.clearPhotos();

@@ -56,6 +56,13 @@ public class GoldSilberShop {
             driver.navigate().to("https://www.goldsilbershop.de/preisliste.html");
             Thread.sleep(10000);
 
+            try {
+                driver.findElement(By.id("CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll")).click();
+
+            } catch (Exception e) {
+
+            }
+
 //            List<WebElement> a = driver.findElements(By.id("focus-lock-id"));
 
             //Cookie

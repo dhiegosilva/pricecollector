@@ -159,7 +159,7 @@ public class Auragentum {
                                 }
 
                                 doubleSell = lines[2].split("\s");
-                                doubleBuy = lines[4].split("\s");
+                                doubleBuy = lines[4].replace("ab ", "").split("\s");
 
                                 articleSellPrice.add(Double.parseDouble(doubleSell[0]
                                         .replace(".", "")
