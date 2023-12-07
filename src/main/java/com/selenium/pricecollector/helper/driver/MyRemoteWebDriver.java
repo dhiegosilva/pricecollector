@@ -26,7 +26,7 @@ public class MyRemoteWebDriver {
             "--disable-browser-side-navigation",
             "--ignore-certificate-errors",
             "--remote-allow-origins=*",
-            "--user-agent=Chrome/113.0.0.0",
+//            "--user-agent=Chrome/119.0.0.0",
             "--lang=de"
     );
 
