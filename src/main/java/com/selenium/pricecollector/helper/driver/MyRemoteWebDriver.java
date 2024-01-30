@@ -1,7 +1,9 @@
 package com.selenium.pricecollector.helper.driver;
 
+import com.selenium.pricecollector.helper.FileConfigurationProperties;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.net.MalformedURLException;
@@ -12,6 +14,8 @@ import java.util.List;
 
 @Service
 public class MyRemoteWebDriver {
+    @Autowired
+    FileConfigurationProperties fileConfigurationProperties;
 
     private final List<String> list = Arrays.asList(
             "--blink-settings=imagesEnabled=false",
@@ -31,7 +35,7 @@ public class MyRemoteWebDriver {
     );
 
     public RemoteWebDriver start() throws MalformedURLException {
-        String url ="http://dxvmli005.degussa.local:4444";
+        String url = fileConfigurationProperties.getUrlDriver();
         ChromeOptions param;
         RemoteWebDriver driver;
         param = new ChromeOptions();
