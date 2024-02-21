@@ -8,5 +8,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class FileConfigurationProperties {
     private String filePathWindows;
     private String filePathLinux;
+    private String urlDriver;
 
 }

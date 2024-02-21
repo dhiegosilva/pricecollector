@@ -14,6 +14,7 @@ ENV PC_SMTP_USERNAME null
 ENV PC_SMTP_PASSWORD null
 ENV PC_SMTP_AUTH null
 ENV PC_SMTP_STARTTLS null
+ENV PC_URL_DRIVER null
 WORKDIR /opt/app
 COPY target/PriceCollector-0.0.1-SNAPSHOT.jar /opt/app/PriceCollector-0.0.1-SNAPSHOT.jar
 ENTRYPOINT ["java", "-jar", "PriceCollector-0.0.1-SNAPSHOT.jar"]
