@@ -21,8 +21,8 @@ public class EmailService {
     FileConfigurationProperties fileConfigurationProperties;
 
     public MimeMessage sendMailHTML() throws MessagingException {
-        String from = "price-collector@degussa-goldhandel.de";
-        String[] to = {"dhiego.silva@degussa-goldhandel.de"};
+        String from = "bi@degussa.com";
+        String[] to = {"dhiego.silva@degussa.com"};
 
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         MimeMessage message = mailSender.createMimeMessage();
@@ -185,5 +185,4 @@ public class EmailService {
             }
         }
     }
-
 }

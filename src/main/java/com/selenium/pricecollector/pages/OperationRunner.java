@@ -40,29 +40,24 @@ public class OperationRunner {
 
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(6);
 
-        Future<?> degussaFuture = executor.submit(() -> {
-            degussa.run();
-        });
+        Future<?> degussaFuture,
+                philoroFuture,
+                auragentumFuture,
+                goldSilberShopFuture,
+                proAurumFuture,
+                reiseBankFuture;
 
-        Future<?> philoroFuture = executor.submit(() -> {
-            philoro.run();
-        });
+        degussaFuture = executor.submit(() -> degussa.run());
 
-        Future<?> auragentumFuture = executor.submit(() -> {
-            auragentum.run();
-        });
+        philoroFuture = executor.submit(() -> philoro.run());
 
-        Future<?> goldSilberShopFuture = executor.submit(() -> {
-            goldSilberShop.run();
-        });
+        auragentumFuture = executor.submit(() -> auragentum.run());
 
-        Future<?> proAurumFuture = executor.submit(() -> {
-            proAurum.run();
-        });
+        goldSilberShopFuture = executor.submit(() -> goldSilberShop.run());
 
-        Future<?> reiseBankFuture = executor.submit(() -> {
-            reiseBank.run();
-        });
+        proAurumFuture = executor.submit(() -> proAurum.run());
+
+        reiseBankFuture = executor.submit(() -> reiseBank.run());
 
 
         degussaFuture.get();
@@ -78,5 +73,4 @@ public class OperationRunner {
             emailService.clearPhotos();
         }
     }
-
 }
