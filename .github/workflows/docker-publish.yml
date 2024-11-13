@@ -19,6 +19,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '21'
+          distribution: 'temurin'  # Specify a distribution, e.g., temurin or adoptopenjdk
 
       - name: Cache Maven packages
         uses: actions/cache@v3
