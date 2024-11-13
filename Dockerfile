@@ -1,9 +1,6 @@
 # Use GraalVM JDK 21 base image (JRE mode)
 FROM ghcr.io/graalvm/jdk-community:21
 
-# Maintain information
-MAINTAINER Dhiego Silva
-
 # Set timezone to Europe/Berlin
 ENV TZ=Europe/Berlin
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
