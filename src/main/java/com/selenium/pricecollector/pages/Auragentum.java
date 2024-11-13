@@ -1,22 +1,31 @@
 package com.selenium.pricecollector.pages;
 
+import com.selenium.pricecollector.helper.FileConfigurationProperties;
 import com.selenium.pricecollector.helper.GlobalFunctions;
 import com.selenium.pricecollector.helper.GlobalVariables;
 import com.selenium.pricecollector.helper.driver.MyRemoteWebDriver;
-import com.selenium.pricecollector.helper.ticker.XMLimport;
 import com.selenium.pricecollector.sql.EntryData;
 import com.selenium.pricecollector.sql.EntryDataRepository;
 import org.openqa.selenium.By;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 @Component
 public class Auragentum {
@@ -26,22 +35,19 @@ public class Auragentum {
     @Autowired
     private MyRemoteWebDriver auragentumDriver;
     @Autowired
-    private XMLimport xmlimport;
+    private GlobalFunctions globalFunctions;
+
     private RemoteWebDriver driver;
+
+    @Autowired
+    FileConfigurationProperties fileConfigurationProperties;
 
     public void run() {
 
-        List<EntryData> entryData = new ArrayList<>();
-        List<String> company = new ArrayList<>();
-        List<String> articleNr = new ArrayList<>();
-        List<String> category = new ArrayList<>();
-        List<String> articleName = new ArrayList<>();
-        List<String> articleWeight = new ArrayList<>();
-        List<Double> articleBuyPrice = new ArrayList<>();
-        List<Double> articleSellPrice = new ArrayList<>();
-        List<Double> ticker = new ArrayList<>();
-        List<Double> aufGeld = new ArrayList<>();
-        List<Double> abSchlag = new ArrayList<>();
+        List<EntryData> entryData = new LinkedList<>();
+
+        String company = "Auragentum", articleNr = null, category = null, articleName = null, articleWeight = null;
+        Double articleBuyPrice = 00.00, articleSellPrice = 00.00;
 
         try {
             driver = auragentumDriver.start();
@@ -59,18 +65,18 @@ public class Auragentum {
                 driver.navigate().to(session);
 
                 //region Gather Data
-                Thread.sleep(4000);
+                Thread.sleep(6000);
 
                 if (session.equals(sessions[0])) {
                     driver.findElement(By.className("cookie-permission--decline-button")).click();
-                    Thread.sleep(4000);
+                    Thread.sleep(6000);
                     //Change compact template
                     templateButtons = driver.findElements(By.className("template--switcher"));
-                    templateChild = templateButtons.get(0).findElements(By.xpath("child::*"));
+                    templateChild = templateButtons.getFirst().findElements(By.xpath("child::*"));
                     templateChild.get(2).click();
-                    Thread.sleep(4000);
+                    Thread.sleep(6000);
                     driver.findElement(By.xpath("//label[contains(.,'Sofort lieferbar')]")).click();
-                    Thread.sleep(4000);
+                    Thread.sleep(6000);
                 }
 
                 try {
@@ -83,7 +89,7 @@ public class Auragentum {
                 for (int a = 0; a < pageQty; a++) {
                     if (a != 0) {
                         driver.findElement(By.className("paging--next")).click();
-                        Thread.sleep(3000);
+                        Thread.sleep(5000);
                     }
                     //Parent
                     //Sessions based on Page QTY
@@ -99,29 +105,29 @@ public class Auragentum {
                             //do if is not "Benachrichtigen wenn verfügbar"
                             if (!lines[4].contains("wenn") && !lines[5].contains("wenn") && !lines[1].contains(" x ")) {
 
-                                articleNr.add(lines[0]);
+                                articleNr = (lines[0]);
                                 if (lines[1].contains("Goldmünz")) {
-                                    category.add("Goldmünzen");
+                                    category = ("Goldmünzen");
                                 } else if (lines[1].contains("Goldbar")) {
-                                    category.add("Goldbarren");
+                                    category = ("Goldbarren");
                                 } else if (lines[1].contains("Silbermünz")) {
-                                    category.add("Silbermünzen");
+                                    category = ("Silbermünzen");
                                 } else if (lines[1].contains("Silberbar")) {
-                                    category.add("Silberbarren");
+                                    category = ("Silberbarren");
                                 } else if (lines[1].contains("Platinmün")) {
-                                    category.add("Platinmünzen");
+                                    category = ("Platinmünzen");
                                 } else if (lines[1].contains("Platinbar")) {
-                                    category.add("Platinbarren");
+                                    category = ("Platinbarren");
                                 } else if (lines[1].contains("Palladiumbar")) {
-                                    category.add("Palladiumbarren");
+                                    category = ("Palladiumbarren");
                                 } else if (lines[1].contains("Palladiummün")) {
-                                    category.add("Palladiummünzen");
+                                    category = ("Palladiummünzen");
                                 } else if (lines[1].contains("Kupfermün")) {
-                                    category.add("Kupfermünzen");
+                                    category = ("Kupfermünzen");
                                 } else if (lines[1].contains("Kupferbar")) {
-                                    category.add("Kupferbarren");
+                                    category = ("Kupferbarren");
                                 } else {
-                                    category.add("");
+                                    category = ("");
                                 }
 
                                 elementsZero = lines[1].replace("Unzen", "oz")
@@ -132,166 +138,77 @@ public class Auragentum {
 
                                 if (elementsZero.length == 2) {
                                     if (elementsZero[1].trim().isEmpty()) {
-                                        articleName.add(category.get(i)
+                                        articleName = (category
                                                 .replace(" - ", " ")
                                                 .replace("'", "''")
                                                 .trim()
                                         );
                                     } else {
-                                        articleName.add(elementsZero[1]
+                                        articleName = (elementsZero[1]
                                                 .replace(" - ", " ")
                                                 .replace("'", "''")
                                                 .trim()
                                         );
                                     }
-                                    articleWeight.add(elementsZero[0]
+                                    articleWeight = (elementsZero[0]
                                             .replace(".", "")
                                             .replace("000 g", " kg")
                                             .replace("31,1 g", "1 oz")
                                     );
                                 } else {
                                     elementsZero = elementsZero[0].trim().split("\s", 3);
-                                    articleName.add(elementsZero[2]
+                                    articleName = (elementsZero[2]
                                             .replace("'", "''")
                                             .trim()
                                     );
-                                    articleWeight.add(elementsZero[0].trim() + " " + elementsZero[1]);
+                                    articleWeight = (elementsZero[0].trim() + " " + elementsZero[1]);
                                 }
 
                                 doubleSell = lines[2].split("\s");
                                 doubleBuy = lines[4].replace("ab ", "").split("\s");
 
-                                articleSellPrice.add(Double.parseDouble(doubleSell[0]
+                                articleSellPrice = (Double.parseDouble(doubleSell[0]
                                         .replace(".", "")
                                         .replace(",", ".")
                                 ));
-                                articleBuyPrice.add(Double.parseDouble(doubleBuy[0]
+                                articleBuyPrice = (Double.parseDouble(doubleBuy[0]
                                         .replace(".", "")
                                         .replace(",", ".")
                                 ));
                             }
+
+                            entryData.add(globalFunctions.getEntryData(company, articleName, articleNr, category, articleBuyPrice, articleSellPrice, articleWeight));
+
                         }
                     }
                 }
             }
 
             //Insert into org.gold.SQL
-            xmlimport.xmlReader();
-            for (int i = 0; i < articleName.size(); i++) {
-
-                ticker.add(null);
-                aufGeld.add(null);
-                abSchlag.add(null);
-                company.add("Auragentum");
-
-                if (category.get(i).toLowerCase().contains("gold")) {
-                    if (articleBuyPrice.get(i) != 00.00 && articleBuyPrice.get(i) != null) {
-                        switch (articleWeight.get(i)) {
-                            case "1 oz" ->
-                                    aufGeld.set(i, (100 / (XMLimport.goldTickerValue) * articleBuyPrice.get(i) - 100) / 100);
-                            case "100 g" ->
-                                    aufGeld.set(i, (100 / (XMLimport.goldTickerValue / 31.1035 * 100) * articleBuyPrice.get(i) - 100) / 100);
-                            case "1 kg" ->
-                                    aufGeld.set(i, (100 / (XMLimport.goldTickerValue / 31.1035 * 1000) * articleBuyPrice.get(i) - 100) / 100);
-                            default -> aufGeld.set(i, null);
-                        }
-                    }
-
-                    if (articleSellPrice.get(i) != 00.00 && articleSellPrice.get(i) != null) {
-                        switch (articleWeight.get(i)) {
-                            case "1 oz" ->
-                                    abSchlag.set(i, (100 / (XMLimport.goldTickerValue) * articleSellPrice.get(i) - 100) / 100);
-                            case "100 g" ->
-                                    abSchlag.set(i, (100 / (XMLimport.goldTickerValue / 31.1035 * 100) * articleSellPrice.get(i) - 100) / 100);
-                            case "1 kg" ->
-                                    abSchlag.set(i, (100 / (XMLimport.goldTickerValue / 31.1035 * 1000) * articleSellPrice.get(i) - 100) / 100);
-                            default -> abSchlag.set(i, null);
-                        }
-                    }
-
-                    ticker.set(i, XMLimport.goldTickerValue);
-
-                } else if (category.get(i).toLowerCase().contains("silber")) {
-                    if (articleBuyPrice.get(i) != 00.00 && articleSellPrice.get(i) != null) {
-
-                        switch (articleWeight.get(i)) {
-                            case "1 oz" ->
-                                    aufGeld.set(i, (100 / (XMLimport.silverTickerValue) * articleBuyPrice.get(i) - 100) / 100);
-                            case "1 kg" ->
-                                    aufGeld.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000) * articleBuyPrice.get(i) - 100) / 100);
-                            case "5 kg" ->
-                                    aufGeld.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000 * 5) * articleBuyPrice.get(i) - 100) / 100);
-                            case "15 kg" ->
-                                    aufGeld.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000 * 15) * articleBuyPrice.get(i) - 100) / 100);
-                            default -> aufGeld.set(i, null);
-                        }
-                    }
-
-                    if (articleSellPrice.get(i) != 00.00 && articleSellPrice.get(i) != null) {
-
-                        switch (articleWeight.get(i)) {
-                            case "1 oz" ->
-                                    abSchlag.set(i, (100 / (XMLimport.silverTickerValue) * articleSellPrice.get(i) - 100) / 100);
-                            case "1 kg" ->
-                                    abSchlag.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000) * articleSellPrice.get(i) - 100) / 100);
-                            case "5 kg" ->
-                                    abSchlag.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000 * 5) * articleSellPrice.get(i) - 100) / 100);
-                            case "15 kg" ->
-                                    abSchlag.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000 * 15) * articleSellPrice.get(i) - 100) / 100);
-                            default -> abSchlag.set(i, null);
-                        }
-                    }
-
-                    ticker.set(i, XMLimport.silverTickerValue);
-
-                } else if (category.get(i).toLowerCase().contains("pall")) {
-
-                    ticker.set(i, XMLimport.palladiumTickerValue);
-
-                } else if (category.get(i).toLowerCase().contains("plat")) {
-
-                    ticker.set(i, XMLimport.platinumTickerValue);
-
-                }
-                if (articleSellPrice.get(i).equals(00.00) || articleSellPrice.get(i) == null) {
-                    entryData.add(new EntryData(
-                            company.get(i),
-                            articleNr.get(i),
-                            category.get(i),
-                            articleName.get(i),
-                            articleWeight.get(i),
-                            articleBuyPrice.get(i),
-                            ticker.get(i),
-                            aufGeld.get(i)
-                    ));
-                } else {
-                    entryData.add(new EntryData(
-                            company.get(i),
-                            articleNr.get(i),
-                            category.get(i),
-                            articleName.get(i),
-                            articleWeight.get(i),
-                            articleBuyPrice.get(i),
-                            articleSellPrice.get(i),
-                            ticker.get(i),
-                            aufGeld.get(i),
-                            abSchlag.get(i))
-                    );
-                }
-            }
-            
-            ///////////////////////////////////////////////////////////////////////
             entryDataRepository.deleteByCompanyAndDataCollectionDatetimeAfter("Auragentum", Timestamp.valueOf(LocalDate.now().atStartOfDay()));
             entryDataRepository.saveAll(entryData);
-        } catch (
-                Exception e) {
+
+        } catch (Throwable e) {
             GlobalVariables.errorCompanyList.add("Auragentum");
+            try (FileWriter writer = new FileWriter(new File(fileConfigurationProperties.getReportFilesPath(), "Auragentum.txt"))) {
+                for (StackTraceElement stackTrace : e.getStackTrace()) {
+                    writer.write(stackTrace.toString() + "\n");
+                }
+            } catch (IOException ex) {
+                System.out.println("An error occurred.");
+                throw new RuntimeException(ex);
+            }
             try {
-                GlobalFunctions.createScreenshot("Auragentum", driver);
+                File SrcFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+                Path destination = Paths.get(Path.of(fileConfigurationProperties.getReportFilesPath(), "Auragentum") + ".png");
+                System.out.println(destination);
+                System.out.println(SrcFile.toPath());
+                Files.move(SrcFile.toPath(), destination, REPLACE_EXISTING);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
+        } finally {
+            driver.quit();
         }
-        driver.quit();
     }
 }

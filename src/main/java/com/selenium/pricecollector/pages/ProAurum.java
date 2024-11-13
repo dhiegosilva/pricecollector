@@ -1,13 +1,15 @@
 package com.selenium.pricecollector.pages;
 
 
+import com.selenium.pricecollector.helper.FileConfigurationProperties;
 import com.selenium.pricecollector.helper.GlobalFunctions;
 import com.selenium.pricecollector.helper.GlobalVariables;
 import com.selenium.pricecollector.helper.driver.MyRemoteWebDriver;
 import com.selenium.pricecollector.helper.ticker.XMLimport;
-import com.selenium.pricecollector.sql.EntryData;
 import com.selenium.pricecollector.sql.EntryDataRepository;
 import org.openqa.selenium.By;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -15,12 +17,19 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 @Component
 public class ProAurum {
@@ -30,21 +39,22 @@ public class ProAurum {
     private MyRemoteWebDriver proAurumDriver;
     @Autowired
     private XMLimport xmlimport;
+    @Autowired
+    private GlobalFunctions globalFunctions;
+
     private RemoteWebDriver driver;
+
+    @Autowired
+    FileConfigurationProperties fileConfigurationProperties;
 
     public void run() {
 
-        List<EntryData> entryData = new ArrayList<>();
-        List<String> company = new ArrayList<>();
-        List<String> articleNr = new ArrayList<>();
-        List<String> category = new ArrayList<>();
-        List<String> articleName = new ArrayList<>();
-        List<String> articleWeight = new ArrayList<>();
-        List<Double> articleBuyPrice = new ArrayList<>();
-        List<Double> articleSellPrice = new ArrayList<>();
-        List<Double> ticker = new ArrayList<>();
-        List<Double> aufGeld = new ArrayList<>();
-        List<Double> abSchlag = new ArrayList<>();
+        List<String> articleNr = new LinkedList<>();
+        List<String> category = new LinkedList<>();
+        List<String> articleName = new LinkedList<>();
+        List<String> articleWeight = new LinkedList<>();
+        List<Double> articleBuyPrice = new LinkedList<>();
+        List<Double> articleSellPrice = new LinkedList<>();
 
         try {
             driver = proAurumDriver.start();
@@ -129,118 +139,26 @@ public class ProAurum {
             }
             //endregion
 
-            ////////////////////////// Insert into SQL 
-            xmlimport.xmlReader();
-            for (int i = 0; i < articleNameElement.size(); i++) {
-
-                ticker.add(null);
-                aufGeld.add(null);
-                abSchlag.add(null);
-                company.add("ProAurum");
-
-                if (category.get(i).toLowerCase().contains("gold")) {
-                    if (articleBuyPrice.get(i) != 00.00 && articleBuyPrice.get(i) != null) {
-                        switch (articleWeight.get(i)) {
-                            case "1 oz" ->
-                                    aufGeld.set(i, (100 / (XMLimport.goldTickerValue) * articleBuyPrice.get(i) - 100) / 100);
-                            case "100 g" ->
-                                    aufGeld.set(i, (100 / (XMLimport.goldTickerValue / 31.1035 * 100) * articleBuyPrice.get(i) - 100) / 100);
-                            case "1 kg" ->
-                                    aufGeld.set(i, (100 / (XMLimport.goldTickerValue / 31.1035 * 1000) * articleBuyPrice.get(i) - 100) / 100);
-                            default -> aufGeld.set(i, null);
-                        }
-                    }
-
-                    if (articleSellPrice.get(i) != 00.00 && articleSellPrice.get(i) != null) {
-                        switch (articleWeight.get(i)) {
-                            case "1 oz" ->
-                                    abSchlag.set(i, (100 / (XMLimport.goldTickerValue) * articleSellPrice.get(i) - 100) / 100);
-                            case "100 g" ->
-                                    abSchlag.set(i, (100 / (XMLimport.goldTickerValue / 31.1035 * 100) * articleSellPrice.get(i) - 100) / 100);
-                            case "1 kg" ->
-                                    abSchlag.set(i, (100 / (XMLimport.goldTickerValue / 31.1035 * 1000) * articleSellPrice.get(i) - 100) / 100);
-                            default -> abSchlag.set(i, null);
-                        }
-                    }
-
-                    ticker.set(i, XMLimport.goldTickerValue);
-
-                } else if (category.get(i).toLowerCase().contains("silber")) {
-                    if (articleBuyPrice.get(i) != 00.00 && articleSellPrice.get(i) != null) {
-
-                        switch (articleWeight.get(i)) {
-                            case "1 oz" ->
-                                    aufGeld.set(i, (100 / (XMLimport.silverTickerValue) * articleBuyPrice.get(i) - 100) / 100);
-                            case "1 kg" ->
-                                    aufGeld.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000) * articleBuyPrice.get(i) - 100) / 100);
-                            case "5 kg" ->
-                                    aufGeld.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000 * 5) * articleBuyPrice.get(i) - 100) / 100);
-                            case "15 kg" ->
-                                    aufGeld.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000 * 15) * articleBuyPrice.get(i) - 100) / 100);
-                            default -> aufGeld.set(i, null);
-                        }
-                    }
-
-                    if (articleSellPrice.get(i) != 00.00 && articleSellPrice.get(i) != null) {
-
-                        switch (articleWeight.get(i)) {
-                            case "1 oz" ->
-                                    abSchlag.set(i, (100 / (XMLimport.silverTickerValue) * articleSellPrice.get(i) - 100) / 100);
-                            case "1 kg" ->
-                                    abSchlag.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000) * articleSellPrice.get(i) - 100) / 100);
-                            case "5 kg" ->
-                                    abSchlag.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000 * 5) * articleSellPrice.get(i) - 100) / 100);
-                            case "15 kg" ->
-                                    abSchlag.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000 * 15) * articleSellPrice.get(i) - 100) / 100);
-                            default -> abSchlag.set(i, null);
-                        }
-                    }
-
-                    ticker.set(i, XMLimport.silverTickerValue);
-
-                } else if (category.get(i).toLowerCase().contains("pall")) {
-
-                    ticker.set(i, XMLimport.palladiumTickerValue);
-
-                } else if (category.get(i).toLowerCase().contains("plat")) {
-
-                    ticker.set(i, XMLimport.platinumTickerValue);
-
-                }
-                if (articleSellPrice.get(i).equals(00.00) || articleSellPrice.get(i) == null) {
-                    entryData.add(new EntryData(
-                            company.get(i),
-                            articleNr.get(i),
-                            category.get(i),
-                            articleName.get(i),
-                            articleWeight.get(i),
-                            articleBuyPrice.get(i),
-                            ticker.get(i),
-                            aufGeld.get(i)
-                    ));
-                } else {
-                    entryData.add(new EntryData(
-                            company.get(i),
-                            articleNr.get(i),
-                            category.get(i),
-                            articleName.get(i),
-                            articleWeight.get(i),
-                            articleBuyPrice.get(i),
-                            articleSellPrice.get(i),
-                            ticker.get(i),
-                            aufGeld.get(i),
-                            abSchlag.get(i))
-                    );
-                }
-            }
-
             //////////////////////////////////////////////////////////////////////////////
             entryDataRepository.deleteByCompanyAndDataCollectionDatetimeAfter("ProAurum", Timestamp.valueOf(LocalDate.now().atStartOfDay()));
-            entryDataRepository.saveAll(entryData);
-        } catch (Exception e) {
+            entryDataRepository.saveAll(globalFunctions.getEntryData("ProAurum", articleName, articleNr, category, articleBuyPrice, articleSellPrice, articleWeight));
+
+        } catch (Throwable e) {
             GlobalVariables.errorCompanyList.add("ProAurum");
+            try (FileWriter writer = new FileWriter(new File(fileConfigurationProperties.getReportFilesPath(), "ProAurum.txt"))) {
+                for (StackTraceElement stackTrace : e.getStackTrace()) {
+                    writer.write(stackTrace.toString() + "\n");
+                }
+            } catch (IOException ex) {
+                System.out.println("An error occurred.");
+                throw new RuntimeException(ex);
+            }
             try {
-                GlobalFunctions.createScreenshot("ProAurum", driver);
+                File SrcFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+                Path destination = Paths.get(Path.of(fileConfigurationProperties.getReportFilesPath(), "ProAurum") + ".png");
+                System.out.println(destination);
+                System.out.println(SrcFile.toPath());
+                Files.move(SrcFile.toPath(), destination, REPLACE_EXISTING);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }

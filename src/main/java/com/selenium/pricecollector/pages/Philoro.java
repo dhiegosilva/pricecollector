@@ -1,26 +1,36 @@
 package com.selenium.pricecollector.pages;
 
 
+import com.selenium.pricecollector.helper.FileConfigurationProperties;
 import com.selenium.pricecollector.helper.GlobalFunctions;
 import com.selenium.pricecollector.helper.GlobalVariables;
 import com.selenium.pricecollector.helper.driver.MyRemoteWebDriver;
-import com.selenium.pricecollector.helper.ticker.XMLimport;
 import com.selenium.pricecollector.sql.EntryData;
 import com.selenium.pricecollector.sql.EntryDataRepository;
 import org.openqa.selenium.By;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 @Component
 public class Philoro {
@@ -30,296 +40,152 @@ public class Philoro {
     @Autowired
     private MyRemoteWebDriver philoroDriver;
     @Autowired
-    private XMLimport xmlimport;
+    private GlobalFunctions globalFunctions;
+
     private RemoteWebDriver driver;
+//    private WebDriver driver;
+
+    @Autowired
+    FileConfigurationProperties fileConfigurationProperties;
 
     public void run() {
 
-        List<EntryData> entryData = new ArrayList<>();
-        List<String> company = new ArrayList<>();
-        List<String> articleNr = new ArrayList<>();
-        List<String> category = new ArrayList<>();
-        List<String> articleName = new ArrayList<>();
-        List<String> articleWeight = new ArrayList<>();
-        List<Double> articleBuyPrice = new ArrayList<>();
-        List<Double> articleSellPrice = new ArrayList<>();
-        List<Double> ticker = new ArrayList<>();
-        List<Double> aufGeld = new ArrayList<>();
-        List<Double> abSchlag = new ArrayList<>();
+        List<EntryData> entryData = new LinkedList<>();
+
+        String company = "Philoro", articleNr = null, category = null, articleName = null, articleWeight = null;
+        Double articleBuyPrice = 00.00, articleSellPrice = 00.00;
+
+        String[] sessions;
+        String lastTwoWords = "";
 
         try {
             driver = philoroDriver.start();
+//            driver = philoroDriver.startWebdriver();
 
             WebElement parent;
             List<WebElement> pageElements;
 
             //region Gather Data
-            driver.navigate().to("https://philoro.de/preisliste");
+            driver.navigate().to("https://philoro.de/preisliste/alle");
             WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
             wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("onetrust-reject-all-handler")));
             Thread.sleep(5000);
             driver.findElement(By.id("onetrust-reject-all-handler")).click();
             Thread.sleep(5000);
-            driver.findElement(By.id("ExternalHideBuyOnly")).click();
+            List<WebElement> checkboxAvailableProducts = driver.findElements(By.className("checkbox__checkmark"));
+
+            Actions actions = new Actions(driver);
+            actions.moveToElement(checkboxAvailableProducts.get(0)).click().perform();
+
             Thread.sleep(10000);
 
-            //Parent
-            parent = driver.findElement(By.id("productOverview"));
-            //Child
-            pageElements = parent.findElements(By.className("philoro_shoping-cart--element"));
-            String row;
-            String[] lines, splitElement, splitCategory;
+            sessions = new String[]{"goldmünzen", "goldbarren", "silbermünzen", "silberbarren", "platin-& palladium", "numismatik"};
 
-            for (WebElement pageElement : pageElements) {
-                row = pageElement.getText();
-                lines = row.split("\n");
+            for (String session : sessions) {
 
-                if (row.contains("\nK")) {
+                //Parent
+                parent = driver.findElement(By.id(session));
+                //Child
+                pageElements = parent.findElements(By.className("border-b"));
 
-                    //category
-                    if (row.toLowerCase().contains("gold bar")) {
-                        category.add("Goldbarren");
+                String row;
+                String[] lines, splitElement, splitCategory;
 
-                    } else if (row.toLowerCase().contains("goldbar")) {
-                        category.add("Goldbarren");
+                for (WebElement pageElement : pageElements) {
+                    row = pageElement.getText();
+                    lines = row.split("\n");
 
-                    } else if (row.toLowerCase().contains("gold")) {
-                        category.add("Goldmünzen");
+                    if (lines.length == 4) {
 
-                    } else if (row.toLowerCase().contains("silber bar")) {
-                        category.add("Silberbarren");
+                        splitCategory = lines[1].split("\s", 2);
 
-                    } else if (row.toLowerCase().contains("silberbar")) {
-                        category.add("Silberbarren");
-
-                    } else if (row.toLowerCase().contains("silber")) {
-                        category.add("Silbermünzen");
-
-                    } else if (row.toLowerCase().contains("platinbar")) {
-                        category.add("Platinbarren");
-
-                    } else if (row.toLowerCase().contains("platin bar")) {
-                        category.add("Platinbarren");
-
-                    } else if (row.toLowerCase().contains("platin")) {
-                        category.add("Platinmünzen");
-
-                    } else if (row.toLowerCase().contains("palladium bar")) {
-                        category.add("Palladiumbarren");
-
-                    } else if (row.toLowerCase().contains("palladiumbar")) {
-                        category.add("Palladiumbarren");
-
-                    } else if (row.toLowerCase().contains("palladium")) {
-                        category.add("Palladiummünze");
-
-                    } else if (row.toLowerCase().contains("kupfer bar")) {
-                        category.add("Kupferbarren");
-
-                    } else if (row.toLowerCase().contains("kupferbar")) {
-                        category.add("Kupferbarren");
-
-                    } else if (row.toLowerCase().contains("kupfer")) {
-                        category.add("Kupfermünzen");
-
-                    } else {
-                        category.add("");
-                    }
-                    articleNr.add(lines[0]);
-
-                    int x;
-                    if (lines[1].toLowerCase().contains("gold") || lines[1].toLowerCase().contains("sil") || lines[1].toLowerCase().contains("kupf") || lines[1].toLowerCase().contains("plat") || lines[1].toLowerCase().contains("pall")) {
-                        x = 1;
-                    } else {
-                        x = 2;
-                    }
-
-                    splitCategory = lines[x].split("\s", 2);
-                    splitElement = splitCategory[1].split("\s[-]?[0-9]+[,.]?[0-9]*([\\/][0-9]+[,.]?[0-9]*)*\\s(?:gr?|oz|ounces?|-grm|grams?)");
-
-                    if (splitElement.length > 1) {
-                        if (splitElement.length == 1) {
-                            articleName.add(splitElement[0] + splitElement[1]
-                                    .replace(" - ", " ")
-                                    .replace("'", "''")
-                                    .replace("000 g", " kg")
-                                    .trim()
-                            );
-
+                        if (splitCategory[0].equals("Gold")) {
+                            category = ("Goldmünzen");
+                        } else if (splitCategory[0].equals("Goldbarren")) {
+                            category = ("Goldbarren");
+                        } else if (splitCategory[0].equals("Silber")) {
+                            category = ("Silbermünzen");
+                        } else if (splitCategory[0].equals("Silberbarren")) {
+                            category = ("Silberbarren");
+                        } else if (splitCategory[0].equals("Platin")) {
+                            category = ("Platinmünzen");
+                        } else if (splitCategory[0].equals("Platinbarren")) {
+                            category = ("Platinbarren");
+                        } else if (splitCategory[0].equals("Palladium")) {
+                            category = ("Palladiummünzen");
+                        } else if (splitCategory[0].equals("Palladiumbarren")) {
+                            category = ("Palladiumbarren");
+                        } else if (splitCategory[0].equals("Kupfer")) {
+                            category = ("Kupfermünzen");
                         } else {
-                            articleName.add((splitElement[0] + splitElement[1])
-                                    .replace(" - ", " ")
-                                    .replace("'", "''")
-                                    .replace("000 g", " kg")
-                                    .trim());
+                            break;
                         }
-                    } else {
-                        if (splitElement.length == 1) {
-                            articleName.add(splitElement[0]
-                                    .replace(" - ", " ")
-                                    .replace("'", "''")
-                                    .replace("000 g", " kg")
-                                    .trim()
-                            );
+                        articleNr = (lines[0]);
 
-                        } else {
-                            articleName.add(splitElement[0]
-                                    .replace(" - ", " ")
-                                    .replace("'", "''")
-                                    .replace("000 g", " kg")
-                                    .trim());
+                        splitElement = splitCategory[1].split("\\s+");
+                        if (splitElement.length >= 2) {
+                            // Extract the last two words
+                            lastTwoWords = splitElement[splitElement.length - 2] + " " + splitElement[splitElement.length - 1];
                         }
-                    }
+                        articleName = (splitCategory[1]);
 
-                    articleWeight.add(lines[x + 1]
-                            .replace("0,50", "1/2")
-                            .replace("0,25", "1/4")
-                            .replace("0,10", "1/10")
-                            .replace(",00 oz", " oz")
-                            .replace(",00 g", " g")
-                            .replace("000 g", " kg")
-                            .replace("31,10 g", "1 oz")
-                    );
-                    if (row.contains("\nV\n")) {
-                        articleSellPrice.add(Double.parseDouble(lines[lines.length - 4]
-                                .substring(2)
+                        articleWeight = (lastTwoWords
+                                .replace("Unze", "oz")
+                                .replace("Gramm", "g")
+                                .replace("0.5", "1/2")
+                                .replace("0.25", "1/4")
+                                .replace("0.1", "1/10")
+                                .replace("0.05", "1/20")
+                                .replace(".00 oz", " oz")
+                                .replace(".00 g", " g")
+                                .replace("000 g", " kg")
+                                .replace("31,10 g", "1 oz")
+                        );
+                        articleSellPrice = (Double.parseDouble(lines[lines.length - 2]
+                                .substring(0, (lines[lines.length - 2].length() - 2))
                                 .replace(".", "")
                                 .replace(",", ".")
                                 .trim()
                         ));
 
-                    } else {
-                        articleSellPrice.add(00.00);
+                        articleBuyPrice = (Double.parseDouble(lines[lines.length - 1]
+                                .substring(0, (lines[lines.length - 2].length() - 2))
+                                .replace(".", "")
+                                .replace(",", ".")
+                                .trim()
+                        ));
+
+                        entryData.add(globalFunctions.getEntryData(company,articleName,articleNr,category,articleBuyPrice,articleSellPrice,articleWeight));
+
                     }
-                    articleBuyPrice.add(Double.parseDouble(lines[lines.length - 2]
-                            .substring(2)
-                            .replace(".", "")
-                            .replace(",", ".")
-                            .trim()
-                    ));
                 }
             }
+
             //Insert into org.gold.SQL
-            xmlimport.xmlReader();
-            for (int i = 0; i < articleName.size(); i++) {
-
-                ticker.add(null);
-                aufGeld.add(null);
-                abSchlag.add(null);
-                company.add("Philoro");
-
-                if (category.get(i).toLowerCase().contains("gold")) {
-                    if (articleBuyPrice.get(i) != 00.00 && articleBuyPrice.get(i) != null) {
-                        switch (articleWeight.get(i)) {
-                            case "1 oz":
-                                aufGeld.set(i, (100 / (XMLimport.goldTickerValue) * articleBuyPrice.get(i) - 100) / 100);
-                                break;
-                            case "100 g":
-                                aufGeld.set(i, (100 / (XMLimport.goldTickerValue / 31.1035 * 100) * articleBuyPrice.get(i) - 100) / 100);
-                                break;
-                            case "1 kg":
-                                aufGeld.set(i, (100 / (XMLimport.goldTickerValue / 31.1035 * 1000) * articleBuyPrice.get(i) - 100) / 100);
-                                break;
-                            default:
-                                aufGeld.set(i, null);
-                                break;
-                        }
-                    }
-
-                    if (articleSellPrice.get(i) != 00.00 && articleSellPrice.get(i) != null) {
-                        switch (articleWeight.get(i)) {
-                            case "1 oz" ->
-                                    abSchlag.set(i, (100 / (XMLimport.goldTickerValue) * articleSellPrice.get(i) - 100) / 100);
-                            case "100 g" ->
-                                    abSchlag.set(i, (100 / (XMLimport.goldTickerValue / 31.1035 * 100) * articleSellPrice.get(i) - 100) / 100);
-                            case "1 kg" ->
-                                    abSchlag.set(i, (100 / (XMLimport.goldTickerValue / 31.1035 * 1000) * articleSellPrice.get(i) - 100) / 100);
-                            default -> abSchlag.set(i, null);
-                        }
-                    }
-
-                    ticker.set(i, XMLimport.goldTickerValue);
-
-                } else if (category.get(i).toLowerCase().contains("silber")) {
-                    if (articleBuyPrice.get(i) != 00.00 && articleSellPrice.get(i) != null) {
-
-                        switch (articleWeight.get(i)) {
-                            case "1 oz" ->
-                                    aufGeld.set(i, (100 / (XMLimport.silverTickerValue) * articleBuyPrice.get(i) - 100) / 100);
-                            case "1 kg" ->
-                                    aufGeld.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000) * articleBuyPrice.get(i) - 100) / 100);
-                            case "5 kg" ->
-                                    aufGeld.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000 * 5) * articleBuyPrice.get(i) - 100) / 100);
-                            case "15 kg" ->
-                                    aufGeld.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000 * 15) * articleBuyPrice.get(i) - 100) / 100);
-                            default -> aufGeld.set(i, null);
-                        }
-                    }
-
-                    if (articleSellPrice.get(i) != 00.00 && articleSellPrice.get(i) != null) {
-
-                        switch (articleWeight.get(i)) {
-                            case "1 oz" ->
-                                    abSchlag.set(i, (100 / (XMLimport.silverTickerValue) * articleSellPrice.get(i) - 100) / 100);
-                            case "1 kg" ->
-                                    abSchlag.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000) * articleSellPrice.get(i) - 100) / 100);
-                            case "5 kg" ->
-                                    abSchlag.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000 * 5) * articleSellPrice.get(i) - 100) / 100);
-                            case "15 kg" ->
-                                    abSchlag.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000 * 15) * articleSellPrice.get(i) - 100) / 100);
-                            default -> abSchlag.set(i, null);
-                        }
-                    }
-
-                    ticker.set(i, XMLimport.silverTickerValue);
-
-                } else if (category.get(i).toLowerCase().contains("pall")) {
-
-                    ticker.set(i, XMLimport.palladiumTickerValue);
-
-                } else if (category.get(i).toLowerCase().contains("plat")) {
-
-                    ticker.set(i, XMLimport.platinumTickerValue);
-
-                }
-                if (articleSellPrice.get(i).equals(00.00) || articleSellPrice.get(i) == null) {
-                    entryData.add(new EntryData(
-                            company.get(i),
-                            articleNr.get(i),
-                            category.get(i),
-                            articleName.get(i),
-                            articleWeight.get(i),
-                            articleBuyPrice.get(i),
-                            ticker.get(i),
-                            aufGeld.get(i)
-                    ));
-                } else {
-                    entryData.add(new EntryData(
-                            company.get(i),
-                            articleNr.get(i),
-                            category.get(i),
-                            articleName.get(i),
-                            articleWeight.get(i),
-                            articleBuyPrice.get(i),
-                            articleSellPrice.get(i),
-                            ticker.get(i),
-                            aufGeld.get(i),
-                            abSchlag.get(i))
-                    );
-                }
-            }
-            
             //////////////////////////////
             entryDataRepository.deleteByCompanyAndDataCollectionDatetimeAfter("Philoro", Timestamp.valueOf(LocalDate.now().atStartOfDay()));
             entryDataRepository.saveAll(entryData);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             GlobalVariables.errorCompanyList.add("Philoro");
+            try (FileWriter writer = new FileWriter(new File(fileConfigurationProperties.getReportFilesPath(), "Philoro.txt"))) {
+                for (StackTraceElement stackTrace : e.getStackTrace()) {
+                    writer.write(stackTrace.toString() + "\n");
+                }
+            } catch (IOException ex) {
+                System.out.println("An error occurred.");
+                throw new RuntimeException(ex);
+            }
             try {
-                GlobalFunctions.createScreenshot("Philoro", driver);
+                File SrcFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+                Path destination = Paths.get(Path.of(fileConfigurationProperties.getReportFilesPath(), "Philoro") + ".png");
+                System.out.println(destination);
+                System.out.println(SrcFile.toPath());
+                Files.move(SrcFile.toPath(), destination, REPLACE_EXISTING);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
+        } finally {
+            driver.quit();
         }
-        driver.quit();
     }
 }
