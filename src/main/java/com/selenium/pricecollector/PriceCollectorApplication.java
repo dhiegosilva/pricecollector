@@ -1,5 +1,6 @@
 package com.selenium.pricecollector;
 
+import com.selenium.pricecollector.email.EmailConfigurationProperties;
 import com.selenium.pricecollector.helper.FileConfigurationProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -9,7 +10,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @AutoConfiguration
 @EnableScheduling
-@EnableConfigurationProperties(value = {FileConfigurationProperties.class})
+@EnableConfigurationProperties(value = {FileConfigurationProperties.class, EmailConfigurationProperties.class})
 @SpringBootApplication
 public class PriceCollectorApplication {
     public static void main(String[] args) {

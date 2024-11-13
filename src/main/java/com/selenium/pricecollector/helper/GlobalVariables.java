@@ -1,26 +1,20 @@
 package com.selenium.pricecollector.helper;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
-@Service
+@Component
 public class GlobalVariables {
     @Autowired
     FileConfigurationProperties fileConfigurationProperties;
-    public static List<String> errorCompanyList = new ArrayList<>();
-    public static String screenshots;
+    public static List<String> errorCompanyList = new LinkedList<>();
+    public static String filePath;
 
     public String path() {
-        String filePath;
-        if (System.getProperty("os.name").contains("Windows")) {
-            filePath = System.getProperty("user.home") + fileConfigurationProperties.getFilePathWindows();
-        } else { //linux
-            filePath = fileConfigurationProperties.getFilePathLinux();
-        }
+        filePath = fileConfigurationProperties.getReportFilesPath();
         return filePath;
     }
-
 }

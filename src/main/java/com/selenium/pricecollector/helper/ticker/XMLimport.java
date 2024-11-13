@@ -18,7 +18,7 @@ import java.util.Base64;
 @Component
 public class XMLimport {
     public static Double goldTickerValue, silverTickerValue, platinumTickerValue, palladiumTickerValue;
-    public void xmlReader() throws ParserConfigurationException, IOException, SAXException {
+    public void xmlSpotPriceReader() throws ParserConfigurationException, IOException, SAXException {
 
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 

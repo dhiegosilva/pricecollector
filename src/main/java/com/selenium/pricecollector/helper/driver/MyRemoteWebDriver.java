@@ -1,18 +1,18 @@
 package com.selenium.pricecollector.helper.driver;
 
 import com.selenium.pricecollector.helper.FileConfigurationProperties;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
-@Service
+@Component
 public class MyRemoteWebDriver {
     @Autowired
     FileConfigurationProperties fileConfigurationProperties;
@@ -34,16 +34,21 @@ public class MyRemoteWebDriver {
             "--lang=de"
     );
 
-    public RemoteWebDriver start() throws MalformedURLException {
-        String url = fileConfigurationProperties.getUrlDriver();
-        ChromeOptions param;
-        RemoteWebDriver driver;
-        param = new ChromeOptions();
+    public RemoteWebDriver start() {
+        ChromeOptions param = new ChromeOptions();
         param.addArguments(list);
-        driver = new RemoteWebDriver(new URL(url), param);
+        RemoteWebDriver driver = new RemoteWebDriver(fileConfigurationProperties.getUrlDriver(), param);
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
         return driver;
     }
 
+    //Used to run locally (Need to change from Remote to Webdriver inside the testing Page)
+    public WebDriver startWebdriver() {
+        ChromeOptions param = new ChromeOptions();
+        param.addArguments(list);
+        WebDriver driver = new ChromeDriver();
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+        return driver;
+    }
 
 }
