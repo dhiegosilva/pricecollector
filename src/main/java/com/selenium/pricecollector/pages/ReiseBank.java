@@ -1,30 +1,25 @@
 package com.selenium.pricecollector.pages;
 
 
-import com.selenium.pricecollector.helper.FileConfigurationProperties;
 import com.selenium.pricecollector.helper.GlobalFunctions;
 import com.selenium.pricecollector.helper.GlobalVariables;
 import com.selenium.pricecollector.helper.driver.MyRemoteWebDriver;
+import com.selenium.pricecollector.helper.ticker.XMLimport;
 import com.selenium.pricecollector.sql.EntryData;
 import com.selenium.pricecollector.sql.EntryDataRepository;
-import org.openqa.selenium.*;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 @Component
 public class ReiseBank {
@@ -34,27 +29,27 @@ public class ReiseBank {
     @Autowired
     private MyRemoteWebDriver reiseBankDriver;
     @Autowired
-    private GlobalFunctions globalFunctions;
-
-    //    private RemoteWebDriver driver;
-    private WebDriver driver;
-
-    @Autowired
-    FileConfigurationProperties fileConfigurationProperties;
+    private XMLimport xmlimport;
+    private RemoteWebDriver driver;
 
     public void run() {
-
-        List<EntryData> entryData = new LinkedList<>();
-
-        String company = "ReiseBank", articleNr = null, category = null, articleName = null, articleWeight = null;
-        Double articleBuyPrice = 00.00, articleSellPrice = 00.00;
+        List<EntryData> entryData = new ArrayList<>();
+        List<String> company = new ArrayList<>();
+        List<String> articleNr = new ArrayList<>();
+        List<String> category = new ArrayList<>();
+        List<String> articleName = new ArrayList<>();
+        List<String> articleWeight = new ArrayList<>();
+        List<Double> articleBuyPrice = new ArrayList<>();
+        List<Double> articleSellPrice = new ArrayList<>();
+        List<Double> ticker = new ArrayList<>();
+        List<Double> aufGeld = new ArrayList<>();
+        List<Double> abSchlag = new ArrayList<>();
 
         try {
             driver = reiseBankDriver.start();
-//            driver = reiseBankDriver.startWebdriver();
 
             List<WebElement> pageElements, cookieModal, parentGrid;
-            int pageQty;
+            int pageQty = 1;
             String row;
             String[] lines, splitName, sessions;
 
@@ -70,7 +65,7 @@ public class ReiseBank {
                 if (Objects.equals(session, sessions[0])) {
                     cookieModal = driver.findElements(By.className("amgdprcookie-button"));
                     if (!cookieModal.isEmpty()) {
-                        cookieModal.getFirst().click();
+                        cookieModal.get(0).click();
                         Thread.sleep(5000);
                     }
                 }
@@ -83,7 +78,7 @@ public class ReiseBank {
                 for (int i = 0; i < pageQty; i++) {
                     parentGrid = driver.findElements(By.className("product-items"));
                     //Child
-                    pageElements = parentGrid.get(0).findElements(By.className("product-item"));
+                    pageElements = parentGrid.get(1).findElements(By.className("product-item"));
 
                     for (WebElement pageElement : pageElements) {
                         row = pageElement.getText();
@@ -93,39 +88,36 @@ public class ReiseBank {
 
                             switch (session) {
                                 case "https://www.reisebank.de/gold/goldmuenzen-kaufen?product_list_limit=36" ->
-                                        category = ("Goldmünzen");
+                                        category.add("Goldmünzen");
                                 case "https://www.reisebank.de/gold/goldbarren-kaufen?product_list_limit=36" ->
-                                        category = ("Goldbarren");
+                                        category.add("Goldbarren");
                                 case "https://www.reisebank.de/silber/silbermuenzen-kaufen?product_list_limit=36" ->
-                                        category = ("Silbermünzen");
+                                        category.add("Silbermünzen");
                                 case "https://www.reisebank.de/silber/silberbarren-kaufen?product_list_limit=36" ->
-                                        category = ("Silberbarren");
+                                        category.add("Silberbarren");
                             }
 
                             splitName = lines[0].split("[-]?[0-9]+[,.]?[0-9]*([\\/][0-9]+[,.]?[0-9]*)*\\s(?:gr?|oz|ounces?|-grm|grams?)\s");
                             if (splitName.length == 2) {
-                                articleName = (splitName[1]
+                                articleName.add(splitName[1]
                                         .replace(" - ", " ")
                                         .replace("'", "''")
                                 );
                             } else {
-                                articleName = (lines[0]
+                                articleName.add(lines[0]
                                         .replace(" - ", " ")
                                         .replace("'", "''")
                                 );
                             }
-                            articleWeight = (lines[2].replace("000 g", " kg"));
-                            articleBuyPrice = (Double.parseDouble(lines[4].substring(0, lines[4].length() - 2)
+                            articleNr.add(null);
+                            articleWeight.add(lines[2].replace("000 g", " kg"));
+                            articleBuyPrice.add(Double.parseDouble(lines[4].substring(0, lines[4].length() - 2)
                                     .replace(".", "")
                                     .replace(",", ".")
                             ));
-//                            articleSellPrice=(00.00);
-                            entryData.add(globalFunctions.getEntryData(company, articleName, articleNr, category, articleBuyPrice, articleSellPrice, articleWeight));
-
+                            articleSellPrice.add(00.00);
                         }
                     }
-
-                    //go to next page
                     if (i < pageQty - 1) {
 
                         try {
@@ -140,32 +132,122 @@ public class ReiseBank {
                     Thread.sleep(5000);
                 }
             }
-
             //Insert into org.gold.SQL
+            xmlimport.xmlReader();
+            for (int i = 0; i < articleName.size(); i++) {
+
+                ticker.add(null);
+                aufGeld.add(null);
+                abSchlag.add(null);
+                company.add("ReiseBank");
+
+                if (category.get(i).toLowerCase().contains("gold")) {
+                    if (articleBuyPrice.get(i) != 00.00 && articleBuyPrice.get(i) != null) {
+                        switch (articleWeight.get(i)) {
+                            case "1 oz" ->
+                                    aufGeld.set(i, (100 / (XMLimport.goldTickerValue) * articleBuyPrice.get(i) - 100) / 100);
+                            case "100 g" ->
+                                    aufGeld.set(i, (100 / (XMLimport.goldTickerValue / 31.1035 * 100) * articleBuyPrice.get(i) - 100) / 100);
+                            case "1 kg" ->
+                                    aufGeld.set(i, (100 / (XMLimport.goldTickerValue / 31.1035 * 1000) * articleBuyPrice.get(i) - 100) / 100);
+                            default -> aufGeld.set(i, null);
+                        }
+                    }
+
+                    if (articleSellPrice.get(i) != 00.00 && articleSellPrice.get(i) != null) {
+                        switch (articleWeight.get(i)) {
+                            case "1 oz" ->
+                                    abSchlag.set(i, (100 / (XMLimport.goldTickerValue) * articleSellPrice.get(i) - 100) / 100);
+                            case "100 g" ->
+                                    abSchlag.set(i, (100 / (XMLimport.goldTickerValue / 31.1035 * 100) * articleSellPrice.get(i) - 100) / 100);
+                            case "1 kg" ->
+                                    abSchlag.set(i, (100 / (XMLimport.goldTickerValue / 31.1035 * 1000) * articleSellPrice.get(i) - 100) / 100);
+                            default -> abSchlag.set(i, null);
+                        }
+                    }
+
+                    ticker.set(i, XMLimport.goldTickerValue);
+
+                } else if (category.get(i).toLowerCase().contains("silber")) {
+                    if (articleBuyPrice.get(i) != 00.00 && articleSellPrice.get(i) != null) {
+
+                        switch (articleWeight.get(i)) {
+                            case "1 oz" ->
+                                    aufGeld.set(i, (100 / (XMLimport.silverTickerValue) * articleBuyPrice.get(i) - 100) / 100);
+                            case "1 kg" ->
+                                    aufGeld.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000) * articleBuyPrice.get(i) - 100) / 100);
+                            case "5 kg" ->
+                                    aufGeld.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000 * 5) * articleBuyPrice.get(i) - 100) / 100);
+                            case "15 kg" ->
+                                    aufGeld.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000 * 15) * articleBuyPrice.get(i) - 100) / 100);
+                            default -> aufGeld.set(i, null);
+                        }
+                    }
+
+                    if (articleSellPrice.get(i) != 00.00 && articleSellPrice.get(i) != null) {
+
+                        switch (articleWeight.get(i)) {
+                            case "1 oz" ->
+                                    abSchlag.set(i, (100 / (XMLimport.silverTickerValue) * articleSellPrice.get(i) - 100) / 100);
+                            case "1 kg" ->
+                                    abSchlag.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000) * articleSellPrice.get(i) - 100) / 100);
+                            case "5 kg" ->
+                                    abSchlag.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000 * 5) * articleSellPrice.get(i) - 100) / 100);
+                            case "15 kg" ->
+                                    abSchlag.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000 * 15) * articleSellPrice.get(i) - 100) / 100);
+                            default -> abSchlag.set(i, null);
+                        }
+                    }
+
+                    ticker.set(i, XMLimport.silverTickerValue);
+
+                } else if (category.get(i).toLowerCase().contains("pall")) {
+
+                    ticker.set(i, XMLimport.palladiumTickerValue);
+
+                } else if (category.get(i).toLowerCase().contains("plat")) {
+
+                    ticker.set(i, XMLimport.platinumTickerValue);
+
+                }
+                if (articleSellPrice.get(i).equals(00.00) || articleSellPrice.get(i) == null) {
+                    entryData.add(new EntryData(
+                            company.get(i),
+                            articleNr.get(i),
+                            category.get(i),
+                            articleName.get(i),
+                            articleWeight.get(i),
+                            articleBuyPrice.get(i),
+                            ticker.get(i),
+                            aufGeld.get(i)
+                    ));
+                } else {
+                    entryData.add(new EntryData(
+                            company.get(i),
+                            articleNr.get(i),
+                            category.get(i),
+                            articleName.get(i),
+                            articleWeight.get(i),
+                            articleBuyPrice.get(i),
+                            articleSellPrice.get(i),
+                            ticker.get(i),
+                            aufGeld.get(i),
+                            abSchlag.get(i))
+                    );
+                }
+            }
+            
+            ///////////////////////////////////
             entryDataRepository.deleteByCompanyAndDataCollectionDatetimeAfter("ReiseBank", Timestamp.valueOf(LocalDate.now().atStartOfDay()));
             entryDataRepository.saveAll(entryData);
 
-        } catch (Throwable e) {
+        } catch (Exception e) {
             GlobalVariables.errorCompanyList.add("ReiseBank");
-            try (FileWriter writer = new FileWriter(new File(fileConfigurationProperties.getReportFilesPath(), "ReiseBank.txt"))) {
-                for (StackTraceElement stackTrace : e.getStackTrace()) {
-                    writer.write(stackTrace.toString() + "\n");
-                }
-            } catch (IOException ex) {
-                System.out.println("An error occurred.");
-                throw new RuntimeException(ex);
-            }
             try {
-                File SrcFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
-                Path destination = Paths.get(Path.of(fileConfigurationProperties.getReportFilesPath(), "ReiseBank") + ".png");
-                System.out.println(destination);
-                System.out.println(SrcFile.toPath());
-                Files.move(SrcFile.toPath(), destination, REPLACE_EXISTING);
+                GlobalFunctions.createScreenshot("ReiseBank", driver);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
-        } finally {
-            driver.quit();
         }
     }
 }

@@ -1,14 +1,12 @@
 package com.selenium.pricecollector.pages;
 
-import com.selenium.pricecollector.helper.FileConfigurationProperties;
 import com.selenium.pricecollector.helper.GlobalFunctions;
 import com.selenium.pricecollector.helper.GlobalVariables;
 import com.selenium.pricecollector.helper.driver.MyRemoteWebDriver;
+import com.selenium.pricecollector.helper.ticker.XMLimport;
 import com.selenium.pricecollector.sql.EntryData;
 import com.selenium.pricecollector.sql.EntryDataRepository;
 import org.openqa.selenium.By;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -16,19 +14,12 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
-
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 @Component
 public class GoldSilberShop {
@@ -38,19 +29,22 @@ public class GoldSilberShop {
     @Autowired
     private MyRemoteWebDriver goldSilberShopDriver;
     @Autowired
-    private GlobalFunctions globalFunctions;
-
+    private XMLimport xmlimport;
     private RemoteWebDriver driver;
-
-    @Autowired
-    FileConfigurationProperties fileConfigurationProperties;
 
     public void run() {
 
-        List<EntryData> entryData = new LinkedList<>();
-
-        String company = "GoldSilberShop", articleNr = null, category = null, articleName = null, articleWeight = null;
-        Double articleBuyPrice = 00.00, articleSellPrice = 00.00;
+        List<EntryData> entryData = new ArrayList<>();
+        List<String> company = new ArrayList<>();
+        List<String> articleNr = new ArrayList<>();
+        List<String> category = new ArrayList<>();
+        List<String> articleName = new ArrayList<>();
+        List<String> articleWeight = new ArrayList<>();
+        List<Double> articleBuyPrice = new ArrayList<>();
+        List<Double> articleSellPrice = new ArrayList<>();
+        List<Double> ticker = new ArrayList<>();
+        List<Double> aufGeld = new ArrayList<>();
+        List<Double> abSchlag = new ArrayList<>();
 
         try {
             driver = goldSilberShopDriver.start();
@@ -60,7 +54,7 @@ public class GoldSilberShop {
 
             //Navigate Page
             driver.navigate().to("https://www.goldsilbershop.de/preisliste.html");
-            Thread.sleep(7000);
+            Thread.sleep(10000);
 
             try {
                 driver.findElement(By.id("CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll")).click();
@@ -94,7 +88,7 @@ public class GoldSilberShop {
                 driver.findElement(By.id(session)).click();
                 WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
                 wait.until(ExpectedConditions.numberOfElementsToBeMoreThan(By.className("mto-pricelist-title"), 3));
-                Thread.sleep(7000);
+                Thread.sleep(25000);
 
                 articleElementName = driver.findElements(By.className("mto-pricelist-title"));
                 sell = driver.findElements(By.className("mto-pricelist-price-ak"));
@@ -106,25 +100,25 @@ public class GoldSilberShop {
                     if (splitName.length > 2) {
                         if (splitName[1].equals("g") || splitName[1].contains("kg") || splitName[1].toLowerCase().contains("unze") || splitName[1].toLowerCase().contains("gramm")) {
                             if (buy.get(i).getText().contains(" €") && sell.get(i).getText().contains(" €")) {
-                                articleNr = (null);
-                                articleName = (articleElementName.get(i).getText()
+                                articleNr.add(null);
+                                articleName.add(articleElementName.get(i).getText()
                                         .replace(splitName[0] + " " + splitName[1], "")
                                         .replace("Gold ", "")
                                         .replace("Silber ", "")
                                         .replace("Platin ", "")
                                         .replace("Palladium ", "")
                                         .trim());
-                                articleWeight = (splitName[0] + " " + splitName[1]
+                                articleWeight.add(splitName[0] + " " + splitName[1]
                                         .replace("Unzen", "oz")
                                         .replace("Unze", "oz")
                                         .replace("31,107 g", "1 oz")
                                         .replace("311,035 g", "10 oz")
                                         .replace("Unzen", "oz"));
-                                articleBuyPrice = (Double.parseDouble(buy.get(i).getText()
+                                articleBuyPrice.add(Double.parseDouble(buy.get(i).getText()
                                         .replace(" €", "")
                                         .replace(".", "")
                                         .replace(",", ".")));
-                                articleSellPrice = (Double.parseDouble(sell.get(i).getText()
+                                articleSellPrice.add(Double.parseDouble(sell.get(i).getText()
                                         .replace(" €", "")
                                         .replace(".", "")
                                         .replace(",", ".")));
@@ -132,9 +126,9 @@ public class GoldSilberShop {
                                 if (articleElementName.get(i).getText().contains("Gold")) {
 
                                     if (articleElementName.get(i).getText().contains("münzba") || articleElementName.get(i).getText().contains("barr")) {
-                                        category = ("Goldbarren");
+                                        category.add("Goldbarren");
                                     } else {
-                                        category = ("Goldmünzen");
+                                        category.add("Goldmünzen");
                                     }
                                 }
 
@@ -142,9 +136,9 @@ public class GoldSilberShop {
                                 else if (articleElementName.get(i).getText().contains("Silber")) {
 
                                     if (articleElementName.get(i).getText().contains("münzb") || articleElementName.get(i).getText().contains("barr")) {
-                                        category = ("Silberbarren");
+                                        category.add("Silberbarren");
                                     } else {
-                                        category = ("Silbermünzen");
+                                        category.add("Silbermünzen");
                                     }
                                 }
 
@@ -152,9 +146,9 @@ public class GoldSilberShop {
                                 else if (articleElementName.get(i).getText().contains("Platin")) {
 
                                     if (articleElementName.get(i).getText().contains("münzb") || articleElementName.get(i).getText().contains("barr")) {
-                                        category = ("Platinbarren");
+                                        category.add("Platinbarren");
                                     } else {
-                                        category = ("Platinmünzen");
+                                        category.add("Platinmünzen");
                                     }
                                 }
 
@@ -162,9 +156,9 @@ public class GoldSilberShop {
                                 else if (articleElementName.get(i).getText().contains("Palladium")) {
 
                                     if (articleElementName.get(i).getText().contains("münzb") || articleElementName.get(i).getText().contains("barr")) {
-                                        category = ("Platinbarren");
+                                        category.add("Platinbarren");
                                     } else {
-                                        category = ("Palladiummünzen");
+                                        category.add("Palladiummünzen");
                                     }
                                 }
 
@@ -172,47 +166,137 @@ public class GoldSilberShop {
                                 else if (articleElementName.get(i).getText().contains("Kupfer")) {
 
                                     if (articleElementName.get(i).getText().contains("münzb") || articleElementName.get(i).getText().contains("barr")) {
-                                        category = ("Kupferbarren");
+                                        category.add("Kupferbarren");
                                     } else {
-                                        category = ("Kupfermünzen");
+                                        category.add("Kupfermünzen");
                                     }
                                 } else {
-                                    category = ("");
+                                    category.add("");
                                 }
-
-                                entryData.add(globalFunctions.getEntryData(company,articleName,articleNr,category,articleBuyPrice,articleSellPrice,articleWeight));
-
                             }
+
                         }
                     }
                 }
             }
 
             //Insert into org.gold.SQL
+
+            ///////////////////////////////////////////
+            xmlimport.xmlReader();
+            for (int i = 0; i < articleName.size(); i++) {
+
+                ticker.add(null);
+                aufGeld.add(null);
+                abSchlag.add(null);
+                company.add("GoldSilberShop");
+
+                if (category.get(i).toLowerCase().contains("gold")) {
+                    if (articleBuyPrice.get(i) != 00.00 && articleBuyPrice.get(i) != null) {
+                        switch (articleWeight.get(i)) {
+                            case "1 oz" ->
+                                    aufGeld.set(i, (100 / (XMLimport.goldTickerValue) * articleBuyPrice.get(i) - 100) / 100);
+                            case "100 g" ->
+                                    aufGeld.set(i, (100 / (XMLimport.goldTickerValue / 31.1035 * 100) * articleBuyPrice.get(i) - 100) / 100);
+                            case "1 kg" ->
+                                    aufGeld.set(i, (100 / (XMLimport.goldTickerValue / 31.1035 * 1000) * articleBuyPrice.get(i) - 100) / 100);
+                            default -> aufGeld.set(i, null);
+                        }
+                    }
+
+                    if (articleSellPrice.get(i) != 00.00 && articleSellPrice.get(i) != null) {
+                        switch (articleWeight.get(i)) {
+                            case "1 oz" ->
+                                    abSchlag.set(i, (100 / (XMLimport.goldTickerValue) * articleSellPrice.get(i) - 100) / 100);
+                            case "100 g" ->
+                                    abSchlag.set(i, (100 / (XMLimport.goldTickerValue / 31.1035 * 100) * articleSellPrice.get(i) - 100) / 100);
+                            case "1 kg" ->
+                                    abSchlag.set(i, (100 / (XMLimport.goldTickerValue / 31.1035 * 1000) * articleSellPrice.get(i) - 100) / 100);
+                            default -> abSchlag.set(i, null);
+                        }
+                    }
+
+                    ticker.set(i, XMLimport.goldTickerValue);
+
+                } else if (category.get(i).toLowerCase().contains("silber")) {
+                    if (articleBuyPrice.get(i) != 00.00 && articleSellPrice.get(i) != null) {
+
+                        switch (articleWeight.get(i)) {
+                            case "1 oz" ->
+                                    aufGeld.set(i, (100 / (XMLimport.silverTickerValue) * articleBuyPrice.get(i) - 100) / 100);
+                            case "1 kg" ->
+                                    aufGeld.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000) * articleBuyPrice.get(i) - 100) / 100);
+                            case "5 kg" ->
+                                    aufGeld.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000 * 5) * articleBuyPrice.get(i) - 100) / 100);
+                            case "15 kg" ->
+                                    aufGeld.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000 * 15) * articleBuyPrice.get(i) - 100) / 100);
+                            default -> aufGeld.set(i, null);
+                        }
+                    }
+
+                    if (articleSellPrice.get(i) != 00.00 && articleSellPrice.get(i) != null) {
+
+                        switch (articleWeight.get(i)) {
+                            case "1 oz" ->
+                                    abSchlag.set(i, (100 / (XMLimport.silverTickerValue) * articleSellPrice.get(i) - 100) / 100);
+                            case "1 kg" ->
+                                    abSchlag.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000) * articleSellPrice.get(i) - 100) / 100);
+                            case "5 kg" ->
+                                    abSchlag.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000 * 5) * articleSellPrice.get(i) - 100) / 100);
+                            case "15 kg" ->
+                                    abSchlag.set(i, (100 / (XMLimport.silverTickerValue / 31.1035 * 1000 * 15) * articleSellPrice.get(i) - 100) / 100);
+                            default -> abSchlag.set(i, null);
+                        }
+                    }
+
+                    ticker.set(i, XMLimport.silverTickerValue);
+
+                } else if (category.get(i).toLowerCase().contains("pall")) {
+
+                    ticker.set(i, XMLimport.palladiumTickerValue);
+
+                } else if (category.get(i).toLowerCase().contains("plat")) {
+
+                    ticker.set(i, XMLimport.platinumTickerValue);
+
+                }
+                if (articleSellPrice.get(i).equals(00.00) || articleSellPrice.get(i) == null) {
+                    entryData.add(new EntryData(
+                            company.get(i),
+                            articleNr.get(i),
+                            category.get(i),
+                            articleName.get(i),
+                            articleWeight.get(i),
+                            articleBuyPrice.get(i),
+                            ticker.get(i),
+                            aufGeld.get(i)
+                    ));
+                } else {
+                    entryData.add(new EntryData(
+                            company.get(i),
+                            articleNr.get(i),
+                            category.get(i),
+                            articleName.get(i),
+                            articleWeight.get(i),
+                            articleBuyPrice.get(i),
+                            articleSellPrice.get(i),
+                            ticker.get(i),
+                            aufGeld.get(i),
+                            abSchlag.get(i))
+                    );
+                }
+            }
+            ////////////////////////////////////////////
             entryDataRepository.deleteByCompanyAndDataCollectionDatetimeAfter("GoldSilberShop", Timestamp.valueOf(LocalDate.now().atStartOfDay()));
             entryDataRepository.saveAll(entryData);
-
-        } catch (Throwable e) {
+        } catch (Exception e) {
             GlobalVariables.errorCompanyList.add("GoldSilberShop");
-            try (FileWriter writer = new FileWriter(new File(fileConfigurationProperties.getReportFilesPath(), "GoldSilberShop.txt"))) {
-                for (StackTraceElement stackTrace : e.getStackTrace()) {
-                    writer.write(stackTrace.toString() + "\n");
-                }
-            } catch (IOException ex) {
-                System.out.println("An error occurred.");
-                throw new RuntimeException(ex);
-            }
             try {
-                File SrcFile = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
-                Path destination = Paths.get(Path.of(fileConfigurationProperties.getReportFilesPath(), "GoldSilberShop") + ".png");
-                System.out.println(destination);
-                System.out.println(SrcFile.toPath());
-                Files.move(SrcFile.toPath(), destination, REPLACE_EXISTING);
+                GlobalFunctions.createScreenshot("GoldSilberShop", driver);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
-        } finally {
-            driver.quit();
         }
+        driver.quit();
     }
 }
