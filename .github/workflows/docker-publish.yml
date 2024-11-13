@@ -1,45 +1,55 @@
-name: Docker Publish
+name: Build and Publish Docker Image
 
 on:
   push:
     branches:
-      - main  # Adjust this if you want to push on a different branch
+      - master
+    tags:
+      - 'v*'  # Only trigger on tags that start with "v", e.g., v1.0, v2.1.0
 
 jobs:
-  build-and-push:
+  build:
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: read
-      packages: write  # Allows pushing to GitHub Container Registry
-      # `packages: write` permission is required to publish Docker images to GHCR
-
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Log in to GitHub Container Registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Cache Docker layers
+      - name: Cache Maven packages
         uses: actions/cache@v3
         with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
-            ${{ runner.os }}-buildx-
+            ${{ runner.os }}-m2-
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+      - name: Build with Maven
+        run: mvn clean install -DskipTests
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
         with:
-          context: .
-          push: true
-          tags: |
-            ghcr.io/dhiegosilva/pricecollector/price-collector:latest
-            ghcr.io/dhiegosilva/pricecollector/price-collector:${{ github.sha }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Log out of GitHub Container Registry
-        run: docker logout ghcr.io
+      - name: Determine Docker Tag
+        id: tag
+        run: |
+          if [[ $GITHUB_REF == refs/heads/master ]]; then
+            echo "tag=latest" >> $GITHUB_ENV
+          else
+            TAG_NAME=${GITHUB_REF#refs/tags/}
+            echo "tag=${TAG_NAME}" >> $GITHUB_ENV
+          fi
+
+      - name: Build Docker image
+        run: docker build -t ghcr.io/${{ github.repository }}/price-collector:${{ env.tag }} .
+
+      - name: Push Docker image to GitHub Container Registry
+        run: docker push ghcr.io/${{ github.repository }}/price-collector:${{ env.tag }}
