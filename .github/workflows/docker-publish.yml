@@ -3,7 +3,7 @@ name: Build and Publish Docker Image
 on:
   push:
     branches:
-      - master
+      - main
     tags:
       - 'v*'  # Only trigger on tags that start with "v", e.g., v1.0, v2.1.0
 
@@ -41,7 +41,7 @@ jobs:
       - name: Determine Docker Tag
         id: tag
         run: |
-          if [[ $GITHUB_REF == refs/heads/master ]]; then
+          if [[ $GITHUB_REF == refs/heads/main ]]; then
             echo "tag=latest" >> $GITHUB_ENV
           else
             TAG_NAME=${GITHUB_REF#refs/tags/}
