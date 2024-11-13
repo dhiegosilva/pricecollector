@@ -1,5 +1,5 @@
 # Use GraalVM JDK 21 base image (JRE mode)
-FROM ghcr.io/graalvm/jdk-community:21
+FROM eclipse-temurin:21-jre-alpine
 
 # Set timezone to Europe/Berlin
 ENV TZ=Europe/Berlin
